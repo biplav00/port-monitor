@@ -10,6 +10,7 @@
 		0A30EFB38E94230E456A98C8 /* PortMonitorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A456995D8C84DE699BD686A /* PortMonitorApp.swift */; };
 		4BF00D71E7747776B9AB3EDF /* PortMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D8C4044AD3D9C13BF175A9 /* PortMonitorTests.swift */; };
 		7B2010A879FD741E42AEFFD6 /* PortEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3175A8DE36EDB56E323566 /* PortEntry.swift */; };
+		7B290E5C634E1AABDDDE322D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4125518521E4405C68139CD /* AppSettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +31,7 @@
 		A8D8C4044AD3D9C13BF175A9 /* PortMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortMonitorTests.swift; sourceTree = "<group>"; };
 		C5F5F8000758DA7CEF485F8E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F27101842710E3BEE8C25370 /* PortMonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PortMonitorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F4125518521E4405C68139CD /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -57,8 +59,17 @@
 				3E3DB39A4420591D8F7D4CDB /* PortMonitor.entitlements */,
 				6A456995D8C84DE699BD686A /* PortMonitorApp.swift */,
 				0F692173D5F337B6B864F130 /* Models */,
+				C148F6097B26D86A44F070CD /* Scanner */,
 			);
 			path = PortMonitor;
+			sourceTree = "<group>";
+		};
+		C148F6097B26D86A44F070CD /* Scanner */ = {
+			isa = PBXGroup;
+			children = (
+				F4125518521E4405C68139CD /* AppSettings.swift */,
+			);
+			path = Scanner;
 			sourceTree = "<group>";
 		};
 		CB3CC988025F15F836BE551B /* PortMonitorTests */ = {
@@ -160,6 +171,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B290E5C634E1AABDDDE322D /* AppSettings.swift in Sources */,
 				7B2010A879FD741E42AEFFD6 /* PortEntry.swift in Sources */,
 				0A30EFB38E94230E456A98C8 /* PortMonitorApp.swift in Sources */,
 			);
