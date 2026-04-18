@@ -17,6 +17,7 @@ struct PopoverView: View {
             }
         }
         .frame(width: 300)
+        .preferredColorScheme(.dark)
     }
 
     private var header: some View {
@@ -25,13 +26,12 @@ struct PopoverView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.primary.opacity(0.85))
             Spacer()
-            Button(action: { showSettings.toggle() }) {
-                Text("⚙")
-                    .font(.system(size: 18))
-                    .foregroundColor(.primary.opacity(0.3))
-                    .frame(width: 24, height: 24)
-            }
-            .buttonStyle(.plain)
+            Text("⚙")
+                .font(.system(size: 18))
+                .foregroundColor(.primary.opacity(0.3))
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+                .onTapGesture { showSettings.toggle() }
         }
         .padding(.horizontal, 13)
         .padding(.top, 10)
@@ -93,12 +93,8 @@ struct PopoverView: View {
         HStack {
             Text("\(scanner.ports.count) port\(scanner.ports.count == 1 ? "" : "s") · every \(intervalLabel)")
                 .font(.system(size: 11))
-                .foregroundColor(.primary.opacity(0.18))
+                .foregroundColor(.primary.opacity(0.3))
             Spacer()
-            Button("Settings…") { showSettings = true }
-                .font(.system(size: 11))
-                .foregroundColor(.blue.opacity(0.65))
-                .buttonStyle(.plain)
         }
         .padding(.horizontal, 13)
         .padding(.vertical, 8)
