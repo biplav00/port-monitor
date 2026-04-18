@@ -12,6 +12,7 @@
 		7B290E5C634E1AABDDDE322D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4125518521E4405C68139CD /* AppSettings.swift */; };
 		9F5651A7200C583287451906 /* PortScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9A4323E1B40C9C5503E0FE /* PortScanner.swift */; };
 		D30B0B2377DAFDAB054B9A1B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA05AA62D396468348A107 /* AppDelegate.swift */; };
+		E383703FA143D07D96D3C017 /* PortRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C569A3CA347834A4B87FD6AC /* PortRowView.swift */; };
 		EB2B687FFE5574A78BA42466 /* PortScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D61A2BAEC340ECAB393818 /* PortScannerTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,7 @@
 		954D20742E2858ED149A962A /* PortMonitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PortMonitor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9A4323E1B40C9C5503E0FE /* PortScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortScanner.swift; sourceTree = "<group>"; };
 		B9D61A2BAEC340ECAB393818 /* PortScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortScannerTests.swift; sourceTree = "<group>"; };
+		C569A3CA347834A4B87FD6AC /* PortRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortRowView.swift; sourceTree = "<group>"; };
 		C5F5F8000758DA7CEF485F8E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F27101842710E3BEE8C25370 /* PortMonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PortMonitorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4125518521E4405C68139CD /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -65,8 +67,17 @@
 				6A456995D8C84DE699BD686A /* PortMonitorApp.swift */,
 				0F692173D5F337B6B864F130 /* Models */,
 				C148F6097B26D86A44F070CD /* Scanner */,
+				7234BA83A696B884CCEFA7F9 /* Views */,
 			);
 			path = PortMonitor;
+			sourceTree = "<group>";
+		};
+		7234BA83A696B884CCEFA7F9 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C569A3CA347834A4B87FD6AC /* PortRowView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		C148F6097B26D86A44F070CD /* Scanner */ = {
@@ -181,6 +192,7 @@
 				7B290E5C634E1AABDDDE322D /* AppSettings.swift in Sources */,
 				7B2010A879FD741E42AEFFD6 /* PortEntry.swift in Sources */,
 				0A30EFB38E94230E456A98C8 /* PortMonitorApp.swift in Sources */,
+				E383703FA143D07D96D3C017 /* PortRowView.swift in Sources */,
 				9F5651A7200C583287451906 /* PortScanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
