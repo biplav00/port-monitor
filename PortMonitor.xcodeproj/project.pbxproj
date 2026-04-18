@@ -11,6 +11,7 @@
 		7B2010A879FD741E42AEFFD6 /* PortEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3175A8DE36EDB56E323566 /* PortEntry.swift */; };
 		7B290E5C634E1AABDDDE322D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4125518521E4405C68139CD /* AppSettings.swift */; };
 		9F5651A7200C583287451906 /* PortScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9A4323E1B40C9C5503E0FE /* PortScanner.swift */; };
+		D30B0B2377DAFDAB054B9A1B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA05AA62D396468348A107 /* AppDelegate.swift */; };
 		EB2B687FFE5574A78BA42466 /* PortScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D61A2BAEC340ECAB393818 /* PortScannerTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -26,6 +27,7 @@
 
 /* Begin PBXFileReference section */
 		3E3DB39A4420591D8F7D4CDB /* PortMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PortMonitor.entitlements; sourceTree = "<group>"; };
+		43AA05AA62D396468348A107 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4D3175A8DE36EDB56E323566 /* PortEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortEntry.swift; sourceTree = "<group>"; };
 		6A456995D8C84DE699BD686A /* PortMonitorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortMonitorApp.swift; sourceTree = "<group>"; };
 		954D20742E2858ED149A962A /* PortMonitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PortMonitor.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -57,6 +59,7 @@
 		3B12E6F7242B9CEE69A24BA6 /* PortMonitor */ = {
 			isa = PBXGroup;
 			children = (
+				43AA05AA62D396468348A107 /* AppDelegate.swift */,
 				C5F5F8000758DA7CEF485F8E /* Info.plist */,
 				3E3DB39A4420591D8F7D4CDB /* PortMonitor.entitlements */,
 				6A456995D8C84DE699BD686A /* PortMonitorApp.swift */,
@@ -174,6 +177,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D30B0B2377DAFDAB054B9A1B /* AppDelegate.swift in Sources */,
 				7B290E5C634E1AABDDDE322D /* AppSettings.swift in Sources */,
 				7B2010A879FD741E42AEFFD6 /* PortEntry.swift in Sources */,
 				0A30EFB38E94230E456A98C8 /* PortMonitorApp.swift in Sources */,
