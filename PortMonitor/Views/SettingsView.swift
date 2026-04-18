@@ -55,10 +55,36 @@ struct SettingsView: View {
                     .padding(.bottom, 4)
             }
             divider()
+            sectionLabel("APPEARANCE")
+            appearancePicker
+            divider()
             launchAtLoginRow
             divider()
             quitButton
         }
+    }
+
+    private var appearancePicker: some View {
+        HStack(spacing: 2) {
+            ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                Button(mode.label) {
+                    settings.appearance = mode
+                }
+                .font(.system(size: 12))
+                .foregroundColor(settings.appearance == mode
+                    ? .primary.opacity(0.85)
+                    : .primary.opacity(0.4))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .background(settings.appearance == mode
+                    ? Color.primary.opacity(0.14)
+                    : Color.clear)
+                .cornerRadius(5)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 13)
+        .padding(.bottom, 8)
     }
 
     private var intervalPicker: some View {

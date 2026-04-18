@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupPopover()
         scanner.start()
         observePortCount()
+        observeAppearance()
     }
 
     private func setupStatusItem() {
@@ -35,8 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover = NSPopover()
         popover.contentSize = NSSize(width: 300, height: 200)
         popover.behavior = .transient
-        popover.appearance = NSAppearance(named: .darkAqua)
         popover.contentViewController = NSHostingController(rootView: content)
+        applyAppearance(settings.appearance)
     }
 
     private func observePortCount() {
@@ -47,6 +48,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.statusItem.button?.title = title
             }
             .store(in: &cancellables)
+    }
+
+    private func observeAppearance() {
+        settings.$appearance
+            .receive(on: RunLoop.main)
+            .sink { [weak self] mode in self?.applyAppearance(mode) }
+            .store(in: &cancellables)
+    }
+
+    private func applyAppearance(_ mode: AppearanceMode) {
+        switch mode {
+        case .system: popover.appearance = nil
+        case .light:  popover.appearance = NSAppearance(named: .aqua)
+        case .dark:   popover.appearance = NSAppearance(named: .darkAqua)
+        }
     }
 
     @objc private func togglePopover(_ sender: AnyObject?) {

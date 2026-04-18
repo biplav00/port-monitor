@@ -67,11 +67,12 @@ final class PortScanner: ObservableObject {
                 guard parts.count >= 9 else { return nil }
                 let command = String(parts[0])
                 guard let pid = Int(parts[1]) else { return nil }
+                let user = String(parts[2])
                 let name = String(parts[8])
                 guard let portStr = name.split(separator: ":").last,
                       let port = Int(portStr) else { return nil }
                 guard seen.insert(port).inserted else { return nil }
-                return PortEntry(id: port, port: port, processName: command, pid: pid)
+                return PortEntry(id: port, port: port, processName: command, pid: pid, user: user)
             }
             .sorted { $0.port < $1.port }
     }

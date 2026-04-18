@@ -5,4 +5,7 @@ struct PortEntry: Identifiable, Equatable {
     let port: Int
     let processName: String
     let pid: Int
+    let user: String
+
+    var isSafeToKill: Bool { user == NSUserName() }
 }

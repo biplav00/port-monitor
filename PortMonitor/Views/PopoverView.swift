@@ -17,21 +17,28 @@ struct PopoverView: View {
             }
         }
         .frame(width: 300)
-        .preferredColorScheme(.dark)
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 4) {
             Text("Port Monitor")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.primary.opacity(0.85))
             Spacer()
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.primary.opacity(0.3))
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+                .onTapGesture { scanner.refresh() }
+                .help("Refresh now")
             Text("⚙")
                 .font(.system(size: 18))
                 .foregroundColor(.primary.opacity(0.3))
                 .frame(width: 24, height: 24)
                 .contentShape(Rectangle())
                 .onTapGesture { showSettings.toggle() }
+                .help("Settings")
         }
         .padding(.horizontal, 13)
         .padding(.top, 10)

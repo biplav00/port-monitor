@@ -10,9 +10,14 @@ struct PortRowView: View {
     var body: some View {
         HStack(spacing: 0) {
             Circle()
-                .fill(Color(red: 0.19, green: 0.82, blue: 0.35))
+                .fill(entry.isSafeToKill
+                    ? Color(red: 0.19, green: 0.82, blue: 0.35)
+                    : Color(red: 0.96, green: 0.62, blue: 0.15))
                 .frame(width: 6, height: 6)
                 .frame(width: 14)
+                .help(entry.isSafeToKill
+                    ? "Your process — safe to kill"
+                    : "Owned by \(entry.user) — may require elevated privileges to kill")
 
             Text("\(entry.port)")
                 .font(.system(size: 13, weight: .medium))
