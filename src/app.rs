@@ -7,7 +7,6 @@ pub struct App {
     scanner: Option<Scanner>,
     cmd_tx: Sender<UiCommand>,
     cmd_rx: Receiver<UiCommand>,
-    #[allow(dead_code)] // read by Task 17 (debounced settings save)
     settings_dirty_at: Option<std::time::Instant>,
 }
 
@@ -90,6 +89,32 @@ impl eframe::App for App {
                 crate::ui::main_view::render(ui, &self.state, &self.cmd_tx);
             }
         });
+
+        if let Some(t) = self.settings_dirty_at {
+            if t.elapsed() >= std::time::Duration::from_millis(500) {
+                let snap = self.state.read().unwrap().settings.clone().normalized();
+                match snap.save() {
+                    Ok(()) => {
+                        {
+                            let mut s = self.state.write().unwrap();
+                            s.settings = snap.clone();
+                        }
+                        if let Some(sc) = &self.scanner {
+                            sc.set_interval(std::time::Duration::from_secs_f64(
+                                snap.refresh_interval_secs,
+                            ));
+                        }
+                    }
+                    Err(e) => {
+                        self.state.write().unwrap().last_error =
+                            Some(format!("Settings save: {e}"));
+                    }
+                }
+                self.settings_dirty_at = None;
+            } else {
+                ctx.request_repaint_after(std::time::Duration::from_millis(150));
+            }
+        }
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
