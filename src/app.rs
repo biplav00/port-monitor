@@ -7,6 +7,8 @@ pub struct App {
     scanner: Option<Scanner>,
     cmd_tx: Sender<UiCommand>,
     cmd_rx: Receiver<UiCommand>,
+    #[allow(dead_code)] // read by Task 17 (debounced settings save)
+    settings_dirty_at: Option<std::time::Instant>,
 }
 
 impl App {
@@ -18,6 +20,7 @@ impl App {
             scanner: Some(scanner),
             cmd_tx,
             cmd_rx,
+            settings_dirty_at: None,
         }
     }
 
@@ -79,7 +82,10 @@ impl eframe::App for App {
         egui::CentralPanel::default().show(ctx, |ui| {
             let show_settings = self.state.read().unwrap().show_settings;
             if show_settings {
-                crate::ui::settings_view::render(ui, &self.state, &self.cmd_tx);
+                let dirty = crate::ui::settings_view::render(ui, &self.state, &self.cmd_tx);
+                if dirty {
+                    self.settings_dirty_at = Some(std::time::Instant::now());
+                }
             } else {
                 crate::ui::main_view::render(ui, &self.state, &self.cmd_tx);
             }
