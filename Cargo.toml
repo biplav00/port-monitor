@@ -35,6 +35,10 @@ crossbeam-channel = "0.5"
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.28", features = ["signal"] }
 
+# Pin libc: netstat2 0.9.1 breaks against libc >= 0.2.156 (`__be16` ambiguity, missing tcp_info::state field).
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "=0.2.155"
+
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.56", features = [
   "Win32_Foundation",

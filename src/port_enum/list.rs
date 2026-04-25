@@ -45,7 +45,9 @@ pub fn list_listening() -> Result<Vec<PortEntry>> {
             })
             .unwrap_or_else(|| ("?".into(), "?".into()));
 
-        let is_current_user = user == current_user;
+        // Windows usernames are case-insensitive; sysinfo may also return a stale-cased
+        // form. Match the current PID directly as a fallback for the same-process case.
+        let is_current_user = pid == std::process::id() || user.eq_ignore_ascii_case(&current_user);
 
         let new_entry = PortEntry {
             port,
