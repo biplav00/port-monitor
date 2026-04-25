@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    name: build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: port-monitor-macos.zip
+          - os: windows-latest
+            artifact: port-monitor-windows.zip
+          - os: ubuntu-latest
+            artifact: port-monitor-linux.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxdo-dev libayatana-appindicator3-dev libxkbcommon-dev
+
+      - run: cargo build --release
+
+      - name: Package macOS
+        if: runner.os == 'macOS'
+        run: |
+          bash packaging/macos/build-app.sh
+          cd target/release
+          zip -r ../../${{ matrix.artifact }} PortMonitor.app
+
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path target/release/port-monitor.exe, README.md, LICENSE -DestinationPath ${{ matrix.artifact }}
+
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist/port-monitor
+          cp target/release/port-monitor dist/port-monitor/
+          cp packaging/linux/port-monitor.desktop dist/port-monitor/
+          cp README.md LICENSE dist/port-monitor/
+          tar czf ${{ matrix.artifact }} -C dist port-monitor
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: ${{ matrix.artifact }}
