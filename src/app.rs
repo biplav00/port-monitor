@@ -8,6 +8,7 @@ pub struct App {
     cmd_tx: Sender<UiCommand>,
     cmd_rx: Receiver<UiCommand>,
     settings_dirty_at: Option<std::time::Instant>,
+    current_appearance: Option<crate::settings::Appearance>,
 }
 
 impl App {
@@ -20,6 +21,7 @@ impl App {
             cmd_tx,
             cmd_rx,
             settings_dirty_at: None,
+            current_appearance: None,
         }
     }
 
@@ -71,6 +73,21 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.drain_commands(ctx);
+
+        let desired = self.state.read().unwrap().settings.appearance;
+        if self.current_appearance != Some(desired) {
+            use crate::settings::Appearance;
+            let visuals = match desired {
+                Appearance::Light => egui::Visuals::light(),
+                Appearance::Dark => egui::Visuals::dark(),
+                Appearance::System => match dark_light::detect() {
+                    dark_light::Mode::Light => egui::Visuals::light(),
+                    _ => egui::Visuals::dark(),
+                },
+            };
+            ctx.set_visuals(visuals);
+            self.current_appearance = Some(desired);
+        }
 
         let visible = self.state.read().unwrap().window_visible;
         ctx.send_viewport_cmd(egui::ViewportCommand::Visible(visible));
