@@ -21,12 +21,10 @@ pub fn apply(entries: &[PortEntry], opts: FilterOpts) -> Vec<PortEntry> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::port_enum::types::Proto;
 
     fn entry(port: u16, is_me: bool) -> PortEntry {
         PortEntry {
             port,
-            proto: Proto::Tcp,
             pid: 1,
             process_name: "p".into(),
             user: if is_me { "me".into() } else { "root".into() },

@@ -1,4 +1,4 @@
-use crate::port_enum::types::{PortEntry, Proto};
+use crate::port_enum::types::PortEntry;
 use anyhow::{Context, Result};
 use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
 use std::collections::HashMap;
@@ -51,7 +51,6 @@ pub fn list_listening() -> Result<Vec<PortEntry>> {
 
         let new_entry = PortEntry {
             port,
-            proto: Proto::Tcp,
             pid,
             process_name,
             user,

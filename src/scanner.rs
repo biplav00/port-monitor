@@ -7,7 +7,10 @@ use std::time::Duration;
 
 pub struct Scanner {
     stop: Arc<AtomicBool>,
-    wake: Arc<(Mutex<()>, Condvar)>,
+    // `bool` is the wake predicate: set by trigger_refresh/set_interval/stop so
+    // a notify sent while the thread is mid-scan isn't lost (it's seen on the
+    // next wait). Without it, Refresh could stall up to a full interval.
+    wake: Arc<(Mutex<bool>, Condvar)>,
     interval: Arc<Mutex<Duration>>,
     handle: Option<JoinHandle<()>>,
 }
@@ -15,7 +18,7 @@ pub struct Scanner {
 impl Scanner {
     pub fn spawn(state: SharedState, ctx: egui::Context) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
-        let wake = Arc::new((Mutex::new(()), Condvar::new()));
+        let wake = Arc::new((Mutex::new(false), Condvar::new()));
         let initial = {
             let s = state.read().unwrap();
             Duration::from_secs_f64(s.settings.refresh_interval_secs)
@@ -42,27 +45,32 @@ impl Scanner {
     }
 
     pub fn trigger_refresh(&self) {
-        self.wake.1.notify_all();
+        self.signal_wake();
     }
 
     pub fn set_interval(&self, d: Duration) {
         *self.interval.lock().unwrap() = d;
-        self.wake.1.notify_all();
+        self.signal_wake();
     }
 
     pub fn stop(mut self) {
         self.stop.store(true, Ordering::SeqCst);
-        self.wake.1.notify_all();
+        self.signal_wake();
         if let Some(h) = self.handle.take() {
             let _ = h.join();
         }
+    }
+
+    fn signal_wake(&self) {
+        *self.wake.0.lock().unwrap() = true;
+        self.wake.1.notify_all();
     }
 
     fn run(
         state: SharedState,
         ctx: egui::Context,
         stop: Arc<AtomicBool>,
-        wake: Arc<(Mutex<()>, Condvar)>,
+        wake: Arc<(Mutex<bool>, Condvar)>,
         interval: Arc<Mutex<Duration>>,
     ) {
         while !stop.load(Ordering::SeqCst) {
@@ -72,7 +80,11 @@ impl Scanner {
             let dur = *interval.lock().unwrap();
             let (lock, cvar) = &*wake;
             let guard = lock.lock().unwrap();
-            let _ = cvar.wait_timeout(guard, dur).unwrap();
+            // Wait until woken (predicate handles lost notifies + spurious wakeups).
+            let (mut woken, _) = cvar
+                .wait_timeout_while(guard, dur, |woken| !*woken)
+                .unwrap();
+            *woken = false;
         }
     }
 

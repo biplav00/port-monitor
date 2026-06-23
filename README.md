@@ -6,7 +6,7 @@ Tiny cross-platform menu-bar app to see — and kill — processes on listening 
 
 - Lives in the system tray. Click the icon to show the port list.
 - Listening TCP ports with process name, PID, owner.
-- Kill button per row (`SIGTERM` by default; **hold Shift** for `SIGKILL` / force kill on Windows).
+- Kill button per row. On macOS & Linux: `SIGTERM` by default, **hold Shift** for `SIGKILL`. On Windows the kill is always forced (`TerminateProcess`); Shift has no effect.
 - Configurable scan interval (1–30 s), port range, and filters (hide system ports, hide other users — both hidden by default).
 - Light / Dark / System appearance.
 - Optional launch-at-login.

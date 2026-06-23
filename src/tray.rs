@@ -7,9 +7,9 @@
 //    per click.  Intent ("any single left-click") requires the filter.
 //    Imports for `MouseButton` and `MouseButtonState` added accordingly.
 //
-// 2. macOS default `menu_on_left_click = true` means a left-click both opens
-//    the context menu *and* fires the Click event (-> ToggleWindow).  The spec
-//    does not override this attribute; behaviour is preserved as-is.
+// 2. macOS default `menu_on_left_click = true` makes a left-click open the
+//    context menu *and* fire the Click event (-> ToggleWindow).  We disable it
+//    so left-click toggles the window and the menu is right-click only.
 
 use crate::state::UiCommand;
 use anyhow::{Context, Result};
@@ -42,6 +42,7 @@ impl Tray {
 
         let inner = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
+            .with_menu_on_left_click(false)
             .with_tooltip("Port Monitor")
             .with_icon(icon)
             .build()

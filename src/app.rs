@@ -8,7 +8,13 @@ pub struct App {
     cmd_tx: Sender<UiCommand>,
     cmd_rx: Receiver<UiCommand>,
     settings_dirty_at: Option<std::time::Instant>,
-    current_appearance: Option<crate::settings::Appearance>,
+    // Last dark/light we applied; tracked (not the Appearance enum) so System
+    // mode can follow live OS theme changes — see update().
+    current_dark: Option<bool>,
+    last_theme_check: Option<std::time::Instant>,
+    // Set by Quit so the close-request handler lets the window actually close
+    // instead of hiding to tray.
+    quitting: bool,
 }
 
 impl App {
@@ -21,7 +27,9 @@ impl App {
             cmd_tx,
             cmd_rx,
             settings_dirty_at: None,
-            current_appearance: None,
+            current_dark: None,
+            last_theme_check: None,
+            quitting: false,
         }
     }
 
@@ -63,6 +71,7 @@ impl App {
                     ctx.request_repaint();
                 }
                 UiCommand::Quit => {
+                    self.quitting = true;
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
             }
@@ -74,19 +83,44 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.drain_commands(ctx);
 
-        let desired = self.state.read().unwrap().settings.appearance;
-        if self.current_appearance != Some(desired) {
+        // Close button (window X) hides to tray instead of quitting; only the
+        // Quit menu item (which sets `quitting`) actually exits.
+        if ctx.input(|i| i.viewport().close_requested()) && !self.quitting {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            self.state.write().unwrap().window_visible = false;
+        }
+
+        // Appearance. For System, re-detect the OS theme (throttled to ~1s) so
+        // it tracks light/dark changes at runtime, not just at launch.
+        {
             use crate::settings::Appearance;
-            let visuals = match desired {
-                Appearance::Light => egui::Visuals::light(),
-                Appearance::Dark => egui::Visuals::dark(),
-                Appearance::System => match dark_light::detect() {
-                    dark_light::Mode::Light => egui::Visuals::light(),
-                    _ => egui::Visuals::dark(),
-                },
+            let desired = self.state.read().unwrap().settings.appearance;
+            let want_dark = match desired {
+                Appearance::Light => Some(false),
+                Appearance::Dark => Some(true),
+                Appearance::System => {
+                    let now = std::time::Instant::now();
+                    let due = self
+                        .last_theme_check
+                        .map_or(true, |t| now.duration_since(t) >= std::time::Duration::from_secs(1));
+                    if due {
+                        self.last_theme_check = Some(now);
+                        Some(!matches!(dark_light::detect(), dark_light::Mode::Light))
+                    } else {
+                        None
+                    }
+                }
             };
-            ctx.set_visuals(visuals);
-            self.current_appearance = Some(desired);
+            if let Some(want_dark) = want_dark {
+                if self.current_dark != Some(want_dark) {
+                    ctx.set_visuals(if want_dark {
+                        egui::Visuals::dark()
+                    } else {
+                        egui::Visuals::light()
+                    });
+                    self.current_dark = Some(want_dark);
+                }
+            }
         }
 
         let visible = self.state.read().unwrap().window_visible;
