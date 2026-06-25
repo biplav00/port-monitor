@@ -34,6 +34,11 @@ confy = "0.6"
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.28", features = ["signal"] }
 
+# Set the popover NSWindow's collection behavior so it floats over other apps'
+# full-screen spaces (Tauri's API only exposes canJoinAllSpaces).
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+
 # Pin libc: netstat2 0.9.1 breaks against libc >= 0.2.156 on Linux.
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "=0.2.155"

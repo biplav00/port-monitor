@@ -64,6 +64,31 @@ fn kill_port(pid: u32, force: bool) -> Result<(), String> {
     port_enum::kill(pid, force).map_err(|e| format!("Kill {pid} failed: {e}"))
 }
 
+/// Make the popover float over *other* apps' full-screen spaces, not just the
+/// active desktop. Tauri only exposes `canJoinAllSpaces`; full-screen overlay
+/// also needs `fullScreenAuxiliary` + a raised window level, set on the NSWindow.
+#[cfg(target_os = "macos")]
+fn float_over_fullscreen(win: &tauri::WebviewWindow) {
+    use objc2::{msg_send, runtime::AnyObject};
+    let Ok(ptr) = win.ns_window() else {
+        return;
+    };
+    let ns = ptr as *mut AnyObject;
+    // NSWindowCollectionBehaviorCanJoinAllSpaces (1<<0) | FullScreenAuxiliary (1<<8)
+    const BEHAVIOR: usize = (1 << 0) | (1 << 8);
+    // NSStatusWindowLevel — draw above the full-screen app's content.
+    const LEVEL: isize = 25;
+    unsafe {
+        let _: () = msg_send![ns, setCollectionBehavior: BEHAVIOR];
+        let _: () = msg_send![ns, setLevel: LEVEL];
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn float_over_fullscreen(win: &tauri::WebviewWindow) {
+    let _ = win.set_visible_on_all_workspaces(true);
+}
+
 /// Show the popover anchored under the tray icon, or hide it if already shown.
 fn toggle_popover(app: &tauri::AppHandle, icon_rect: Option<(f64, f64, f64, f64)>) {
     let Some(win) = app.get_webview_window("popover") else {
@@ -137,10 +162,8 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Float the popover over other apps' full-screen spaces (macOS:
-            // join all spaces, not just the active desktop).
             if let Some(win) = app.get_webview_window("popover") {
-                let _ = win.set_visible_on_all_workspaces(true);
+                float_over_fullscreen(&win);
             }
 
             Ok(())

@@ -2675,6 +2675,7 @@ dependencies = [
  "libc",
  "netstat2",
  "nix",
+ "objc2",
  "serde",
  "sysinfo",
  "tauri",
