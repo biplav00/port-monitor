@@ -11,26 +11,31 @@ Tiny cross-platform menu-bar app to see — and kill — processes on listening 
 - Light / Dark / System appearance.
 - Optional launch-at-login.
 
+Built with [Tauri](https://tauri.app) (Rust backend + web UI) — a ~6 MB native menu-bar app, no bundled browser.
+
 ## Install
 
 Download the latest build from the [Releases](https://github.com/biplav/port-monitor/releases) page.
 
-- **macOS:** unzip, drag `PortMonitor.app` to Applications. Binaries are unsigned — on first run, right-click → Open.
-- **Windows:** unzip and run `port-monitor.exe`.
-- **Linux:** extract the tarball and run the binary. Drop the `.desktop` file in `~/.local/share/applications/` to get a launcher entry.
+- **macOS:** open the `.dmg`, drag **Port Monitor** to Applications. Unsigned — on first run, right-click → Open.
+- **Windows:** run the `.msi` installer.
+- **Linux:** install the `.deb`/`.AppImage`.
 
 ## Build from source
 
-Requires Rust (stable).
+Requires Rust (stable), Node, and [pnpm](https://pnpm.io).
 
 ```bash
-cargo run --release
+pnpm install
+pnpm tauri dev     # run in development
+pnpm tauri build   # produce a release bundle
 ```
 
 Linux build deps:
 
 ```bash
-sudo apt-get install libgtk-3-dev libxdo-dev libayatana-appindicator3-dev libxkbcommon-dev
+sudo apt-get install libwebkit2gtk-4.1-dev build-essential libxdo-dev \
+  libssl-dev libayatana-appindicator3-dev librsvg2-dev
 ```
 
 ## License
