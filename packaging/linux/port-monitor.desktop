@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Port Monitor
-Comment=Monitor and kill processes on listening TCP ports
-Exec=port-monitor
-Icon=port-monitor
-Terminal=false
-Type=Application
-Categories=Utility;Network;
-StartupNotify=false
