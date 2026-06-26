@@ -13,7 +13,7 @@ jobs:
     outputs:
       tag: ${{ steps.bump.outputs.tag }}
       version: ${{ steps.bump.outputs.version }}
-      released: ${{ steps.release.outputs.released }}
+      released: ${{ steps.bump.outputs.released }}
     steps:
       - uses: actions/checkout@v4
         with:
