@@ -18,8 +18,8 @@ jobs:
       - id: release
         uses: googleapis/release-please-action@v4
         with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+          release-type: python
+          package-name: port-monitor
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-pull-request: true
 
