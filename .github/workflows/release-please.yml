@@ -10,8 +10,6 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     outputs:
       release_created: ${{ steps.release.outputs.releases_created }}
       tag: ${{ steps.release.outputs.tag }}
@@ -28,7 +26,8 @@ jobs:
           package-name: port-monitor
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-pull-request: true
-          bootstrap-sha: af8ccdc8925e3ad33b45f79d96fabf9e8fd136b6
+          manifest-file: .release-please-manifest.json
+          config-file: release-please-config.json
 
   build:
     needs: release-please
