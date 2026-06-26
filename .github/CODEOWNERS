@@ -1,0 +1,5 @@
+.github/CODEOWNERS
+        *       @biplav00
+        src/    @biplav00
+        packaging/ @biplav00
+        tests/   @biplav00
