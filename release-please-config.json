@@ -4,9 +4,7 @@
     ".": {
       "package-name": "port-monitor",
       "release-type": "python",
-      "version-file": "pyproject.toml",
-      "pull-request-strategy": "squash"
+      "version-file": "pyproject.toml"
     }
-  },
-  "last-release-sha": "1d859a4b8f0ff6b92167986fea8b7bb8abd546a6"
+  }
 }
