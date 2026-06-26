@@ -1,0 +1,23 @@
+[project]
+name = "port-monitor"
+version = "0.3.0"
+description = "macOS menu-bar app to see and kill processes on listening TCP ports"
+readme = "README.md"
+authors = [{ name = "Biplav Subedi" }]
+requires-python = ">=3.12"
+dependencies = [
+    "pyobjc-framework-cocoa>=12.2",
+]
+
+[project.scripts]
+port-monitor = "port_monitor.app:run"
+
+[build-system]
+requires = ["uv_build>=0.11.15,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.20.0",
+    "pytest>=9.0.3",
+]
