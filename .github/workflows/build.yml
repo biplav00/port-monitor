@@ -1,40 +1,45 @@
-.github/workflows/build.yml
-        on:
-          push:
-            tags:
-              - "v*"
-          workflow_dispatch:
-        jobs:
-          build:
-            runs-on: macos-latest
-            steps:
-              - uses: actions/checkout@v4
+name: build
 
-              - name: Set up Python
-                uses: actions/setup-python@v5
-                with:
-                  python-version: "3.12"
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
-              - name: Install uv
-                run: curl -LsSf https://astral.sh/uv/install.sh | sh
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
 
-              - name: Install dependencies (including PyInstaller)
-                run: uv sync --group dev
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-              - name: Build app
-                run: ./packaging/build_dmg.sh
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-              - name: Upload DMG
-                uses: actions/upload-artifact@v4
-                with:
-                  name: Port-Monitor-DMG
-                  path: packaging/dist/Port\ Monitor.dmg
+      - name: Install dependencies (including PyInstaller)
+        run: uv sync --group dev
 
-              - name: Release assets
-                uses: softprops/action-gh-release@v2
-                if: startsWith(github.ref, 'refs/tags/')
-                with:
-                  files: |
-                    packaging/dist/Port\ Monitor.dmg
-                  draft: false
-                  prerelease: false
+      - name: Build app
+        run: ./packaging/build_dmg.sh
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Port-Monitor-DMG
+          path: packaging/dist/Port\ Monitor.dmg
+
+      - name: Release assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            packaging/dist/Port\ Monitor.dmg
+          draft: false
+          prerelease: false
