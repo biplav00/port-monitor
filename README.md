@@ -1,41 +1,33 @@
 # Port Monitor
 
-Tiny cross-platform menu-bar app to see — and kill — processes on listening TCP ports. macOS, Windows, Linux.
+A tiny **macOS** menu-bar app to see — and kill — processes on listening TCP ports.
 
 ## Features
 
-- Lives in the system tray. Click the icon to show the port list.
-- Listening TCP ports with process name, PID, owner.
-- Kill button per row. On macOS & Linux: `SIGTERM` by default, **hold Shift** for `SIGKILL`. On Windows the kill is always forced (`TerminateProcess`); Shift has no effect.
-- Configurable scan interval (1–30 s), port range, and filters (hide system ports, hide other users — both hidden by default).
-- Light / Dark / System appearance.
-- Optional launch-at-login.
+- Lives in the menu bar (no Dock icon). Click the icon for a native popover that
+  floats over full-screen apps and dismisses on click-away.
+- Listening TCP ports with process name, PID, and owner.
+- Kill button per row — `SIGTERM` by default, **hold Shift** for `SIGKILL`, with a
+  confirmation prompt. Another user's processes are shown dimmed and can't be killed.
+- Auto-refreshes; **Refresh** and **Quit** in the footer.
 
-Built with [Tauri](https://tauri.app) (Rust backend + web UI) — a ~6 MB native menu-bar app, no bundled browser.
+Built natively with **Python + PyObjC** (`NSStatusItem` + `NSPopover`). macOS-only —
+that's deliberate: the native popover gives full-screen overlay and native look that
+a cross-platform webview window can't.
 
 ## Install
 
-Download the latest build from the [Releases](https://github.com/biplav/port-monitor/releases) page.
+Download the latest `.dmg` from the [Releases](https://github.com/biplav00/port-monitor/releases) page,
+open it, and drag **Port Monitor** to Applications. Unsigned — on first run, right-click → **Open**.
 
-- **macOS:** open the `.dmg`, drag **Port Monitor** to Applications. Unsigned — on first run, right-click → Open.
-- **Windows:** run the `.msi` installer.
-- **Linux:** install the `.deb`/`.AppImage`.
+## Build / run from source
 
-## Build from source
-
-Requires Rust (stable), Node, and [pnpm](https://pnpm.io).
+Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
-pnpm install
-pnpm tauri dev     # run in development
-pnpm tauri build   # produce a release bundle
-```
-
-Linux build deps:
-
-```bash
-sudo apt-get install libwebkit2gtk-4.1-dev build-essential libxdo-dev \
-  libssl-dev libayatana-appindicator3-dev librsvg2-dev
+uv run python -m port_monitor   # run from source
+uv run pytest                   # tests
+packaging/build_dmg.sh          # produce Port Monitor.app + .dmg
 ```
 
 ## License

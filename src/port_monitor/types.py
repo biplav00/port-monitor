@@ -12,3 +12,4 @@ class Port:
     command: str
     user: str
     is_v4: bool
+    is_current_user: bool

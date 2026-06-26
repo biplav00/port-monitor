@@ -5,6 +5,7 @@ processes, which is exactly the dev-server-janitor scope.
 """
 from __future__ import annotations
 
+import getpass
 import os
 import signal
 import subprocess
@@ -22,7 +23,12 @@ def list_listening() -> list[Port]:
         ).stdout
     except (subprocess.SubprocessError, FileNotFoundError):
         return []
+    return parse_lsof(out, getpass.getuser())
 
+
+def parse_lsof(out: str, me: str) -> list[Port]:
+    """Pure transform of `lsof -F pcLn` output → sorted, deduped ports.
+    Split out so the parsing/dedup logic is testable without invoking lsof."""
     # lsof -F emits one field per line: p<pid>, c<command>, L<login>, then
     # f<fd>/n<addr> per open file. Track the current process; each n is a listener.
     by_port: dict[int, tuple[Port, bool]] = {}
@@ -46,7 +52,14 @@ def list_listening() -> list[Port]:
             except (ValueError, IndexError):
                 continue
             is_v4 = not val.startswith("[")
-            entry = Port(port=port, pid=pid, command=command, user=user, is_v4=is_v4)
+            entry = Port(
+                port=port,
+                pid=pid,
+                command=command,
+                user=user,
+                is_v4=is_v4,
+                is_current_user=(user == me),
+            )
             # Dedupe by port, preferring the IPv4 binding.
             existing = by_port.get(port)
             if existing is None or (not existing[1] and is_v4):

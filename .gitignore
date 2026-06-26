@@ -1,20 +1,20 @@
-# Rust
-/target
-src-tauri/target
+# Python
+__pycache__/
+*.pyc
+.venv/
 
-# Node / frontend
-node_modules
-/dist
-.svelte-kit
-
-# Tauri generated
-src-tauri/gen
-
-# Build artifacts / scratch
-src-tauri/icon-source.png
+# PyInstaller build output
+packaging/build/
+packaging/dist/
 
 # misc
 *.log
 .DS_Store
 .idea/
 .vscode/
+
+# Stray build artifacts from the old Tauri/web stack (still on disk)
+node_modules/
+/target
+/dist
+/src-tauri/

@@ -123,7 +123,10 @@ class PopoverView(NSView):
             sub = _label(
                 _PAD + 70, y + 6, iw - 150, 11, NSColor.secondaryLabelColor()
             )
-            sub.setStringValue_(f"pid {p.pid} · {p.user}")
+            # Show the owner only when it isn't you — your own ports are the norm.
+            sub.setStringValue_(
+                f"pid {p.pid}" if p.is_current_user else f"pid {p.pid} · {p.user}"
+            )
 
             kill = NSButton.alloc().initWithFrame_(NSMakeRect(_W - _PAD - 60, y + 11, 60, 24))
             kill.setTitle_("Kill")
@@ -131,6 +134,11 @@ class PopoverView(NSView):
             kill.setTag_(p.pid)
             kill.setTarget_(target)
             kill.setAction_("kill:")
+            # Can't kill another user's process without privileges: dim + disable.
+            if not p.is_current_user:
+                kill.setEnabled_(False)
+                for v in (port, name, sub):
+                    v.setAlphaValue_(0.55)
 
             for v in (port, name, sub, kill):
                 self.doc.addSubview_(v)

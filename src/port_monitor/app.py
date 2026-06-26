@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import objc
 from AppKit import (
+    NSAlert,
+    NSAlertFirstButtonReturn,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
     NSEvent,
@@ -32,6 +34,7 @@ class _Controller(NSObject):
         self = objc.super(_Controller, self).init()
         if self is None:
             return None
+        self._ports = []
 
         bar = NSStatusBar.systemStatusBar()
         self.item = bar.statusItemWithLength_(NSVariableStatusItemLength)
@@ -70,7 +73,8 @@ class _Controller(NSObject):
     @objc.python_method
     def _refresh(self):
         try:
-            self.view.render_ports_(ports.list_listening(), self)
+            self._ports = ports.list_listening()
+            self.view.render_ports_(self._ports, self)
         except Exception:
             pass  # never let a render error kill the timer loop
 
@@ -81,9 +85,22 @@ class _Controller(NSObject):
         self._refresh()
 
     def kill_(self, sender):
+        pid = int(sender.tag())
         force = bool(NSEvent.modifierFlags() & NSEventModifierFlagShift)
+        match = next((p for p in self._ports if p.pid == pid), None)
+        name = match.command if match else f"pid {pid}"
+
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(f"Kill {name}?")
+        alert.setInformativeText_(
+            f"{'Force kill (SIGKILL)' if force else 'Terminate (SIGTERM)'} pid {pid}."
+        )
+        alert.addButtonWithTitle_("Kill")  # first button = default (Return)
+        alert.addButtonWithTitle_("Cancel")
+        if alert.runModal() != NSAlertFirstButtonReturn:
+            return
         try:
-            ports.kill(int(sender.tag()), force)
+            ports.kill(pid, force)
         except (ProcessLookupError, PermissionError):
             pass
         self._refresh()
