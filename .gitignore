@@ -7,6 +7,9 @@ __pycache__/
 packaging/build/
 packaging/dist/
 
+# Generated iconset (reproducible from build_icon.py)
+packaging/port-monitor.iconset/
+
 # misc
 *.log
 .DS_Store

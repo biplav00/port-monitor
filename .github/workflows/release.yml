@@ -74,11 +74,12 @@ jobs:
       - name: Build app
         run: ./packaging/build_dmg.sh
 
-      - name: Upload DMG to release
+      - name: Upload installers to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release.outputs.tag }}
           files: |
             packaging/dist/Port Monitor.dmg
+            packaging/dist/Port Monitor.pkg
           draft: false
           prerelease: false
