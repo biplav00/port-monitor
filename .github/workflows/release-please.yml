@@ -28,7 +28,7 @@ jobs:
           package-name: port-monitor
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-pull-request: true
-          release-as: "0.4.0"
+          bootstrap-sha: af8ccdc8925e3ad33b45f79d96fabf9e8fd136b6
 
   build:
     needs: release-please
