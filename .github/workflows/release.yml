@@ -34,7 +34,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          uv pip install --system PyGithub tomli 2>/dev/null || pip install PyGithub tomli
+          python3 -c "import tomllib" 2>/dev/null || pip install tomli
           python3 .github/scripts/bump_version.py
 
       - id: release
@@ -42,6 +42,8 @@ jobs:
         if: steps.bump.outputs.released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.bump.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.bump.outputs.version }}
         run: |
           set -euo pipefail
           python3 .github/scripts/create_release.py

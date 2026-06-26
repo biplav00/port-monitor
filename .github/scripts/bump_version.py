@@ -35,21 +35,22 @@ def latest_tag() -> str | None:
     """Return the highest semver tag (without leading 'v') or None."""
     out = run(["git", "tag", "--list", "v*", "--sort=-v:refname"])
     tags = [t.strip() for t in out.splitlines() if t.strip()]
-    return tags[0].lstrip("v") if tags else None
+    return tags[0] if tags else None
 
 
-def commits_since(sha: str | None) -> list[str]:
-    rng = sha if sha else "HEAD"
+def commits_since(tag: str | None) -> list[str]:
+    rng = tag if tag else "HEAD"
     out = run(["git", "log", f"{rng}..HEAD", "--pretty=%s"])
     return [line for line in out.splitlines() if line.strip()]
 
 
-def next_version(curr: str | None, msgs: list[str]) -> str | None:
+def next_version(curr_tag: str | None, msgs: list[str]) -> str | None:
     if not msgs:
         return None
-    if curr is None:
+    if curr_tag is None:
         # Bootstrap: start at 0.1.0.
         return "0.1.0"
+    curr = curr_tag.lstrip("v")
     major, minor, patch = (int(x) for x in curr.split("."))
     bumped = False
     for m in msgs:
@@ -73,15 +74,15 @@ def write_outputs(d: dict[str, str]) -> None:
 
 
 def main() -> int:
-    curr = latest_tag()
-    msgs = commits_since(curr)
-    new = next_version(curr, msgs)
+    curr_tag = latest_tag()
+    msgs = commits_since(curr_tag)
+    new = next_version(curr_tag, msgs)
     if new is None:
-        print(f"No release-worthy commits since v{curr or '(none)'}; skipping.")
+        print(f"No release-worthy commits since {curr_tag or '(none)'}; skipping.")
         write_outputs({"released": "false"})
         return 0
 
-    print(f"Current: v{curr}  ->  New: v{new}")
+    print(f"Current: {curr_tag or '(none)'}  ->  New: v{new}")
     for m in msgs:
         print(f"  · {m}")
 
