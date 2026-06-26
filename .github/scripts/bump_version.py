@@ -82,14 +82,20 @@ def main() -> int:
         write_outputs({"released": "false"})
         return 0
 
+    # Read current version from pyproject.toml to avoid no-op releases.
+    with open(PYPROJECT, "rb") as f:
+        current_pyproject = tomllib.load(f)["project"]["version"]
+    if current_pyproject == new:
+        print(f"pyproject.toml is already at {new}; skipping.")
+        write_outputs({"released": "false"})
+        return 0
+
     print(f"Current: {curr_tag or '(none)'}  ->  New: v{new}")
+    print(f"pyproject.toml: {current_pyproject} -> {new}")
     for m in msgs:
         print(f"  · {m}")
 
     # Update pyproject.toml.
-    with open(PYPROJECT, "rb") as f:
-        data = tomllib.load(f)
-    data["project"]["version"] = new
     text = PYPROJECT.read_text()
     text = re.sub(
         r'^version\s*=\s*"[^"]+"',
@@ -102,10 +108,6 @@ def main() -> int:
 
     # Commit, tag, push.
     tag = f"v{new}"
-    env = {**os.environ, "GIT_AUTHOR_NAME": "github-actions[bot]",
-           "GIT_AUTHOR_EMAIL": "41898282+github-actions[bot]@users.noreply.github.com",
-           "GIT_COMMITTER_NAME": "github-actions[bot]",
-           "GIT_COMMITTER_EMAIL": "41898282+github-actions[bot]@users.noreply.github.com"}
     run(["git", "config", "user.name", "github-actions[bot]"])
     run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
     run(["git", "add", "pyproject.toml"])
