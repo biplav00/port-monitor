@@ -1,6 +1,6 @@
 [project]
 name = "port-monitor"
-version = "0.6.0"
+version = "0.7.0"
 description = "macOS menu-bar app to see and kill processes on listening TCP ports"
 readme = "README.md"
 authors = [{ name = "Biplav Subedi" }]
