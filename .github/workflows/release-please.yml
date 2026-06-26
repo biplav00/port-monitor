@@ -23,6 +23,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-pull-request: true
           release-as: "0.3.0"
+        env:
+          ACTIONS_STEP_DEBUG: true
 
   build:
     needs: release-please
