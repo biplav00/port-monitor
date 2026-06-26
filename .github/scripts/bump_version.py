@@ -27,6 +27,13 @@ MINOR = "feat"
 PATCH = ("fix", "perf", "refactor")
 
 
+def _cmp(a: str, b: str) -> int:
+    """Compare two dotted versions. -1, 0, +1 like a cmp."""
+    pa = tuple(int(x) for x in a.split("."))
+    pb = tuple(int(x) for x in b.split("."))
+    return (pa > pb) - (pa < pb)
+
+
 def run(cmd: list[str], **kw) -> str:
     return subprocess.check_output(cmd, cwd=ROOT, text=True, **kw)
 
@@ -74,17 +81,23 @@ def write_outputs(d: dict[str, str]) -> None:
 
 
 def main() -> int:
+    # Read current version from pyproject.toml — that's our baseline.
+    with open(PYPROJECT, "rb") as f:
+        current_pyproject = tomllib.load(f)["project"]["version"]
     curr_tag = latest_tag()
+    # Use whichever is higher as the "current" version for bumping.
+    baseline = current_pyproject
+    if curr_tag:
+        tag_v = curr_tag.lstrip("v")
+        if _cmp(tag_v, baseline) > 0:
+            baseline = tag_v
     msgs = commits_since(curr_tag)
-    new = next_version(curr_tag, msgs)
+    new = next_version(f"v{baseline}", msgs)
     if new is None:
         print(f"No release-worthy commits since {curr_tag or '(none)'}; skipping.")
         write_outputs({"released": "false"})
         return 0
 
-    # Read current version from pyproject.toml to avoid no-op releases.
-    with open(PYPROJECT, "rb") as f:
-        current_pyproject = tomllib.load(f)["project"]["version"]
     if current_pyproject == new:
         print(f"pyproject.toml is already at {new}; skipping.")
         write_outputs({"released": "false"})
