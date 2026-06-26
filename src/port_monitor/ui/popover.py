@@ -2,9 +2,10 @@
 refresh icon), a scrollable list of port rows, and a hint/quit footer.
 
 Each row shows a status LED (green = your killable port, gray = another user's),
-the port in SF Mono, the command, and an owner subtitle. The destructive Kill
-control is revealed on hover. `render_ports_(ports, target)` rebuilds the list
-and wires each Kill button to `target`'s `kill:` action (tag = pid)."""
+the port in SF Mono, the command, and an owner subtitle. Hovering a killable row
+reveals a trash button that expands into an inline green-check / red-cross
+confirm. `render_ports_(ports, target)` rebuilds the list and wires each confirm
+to `target`'s `kill:` action (tag = pid)."""
 from __future__ import annotations
 
 import objc
@@ -15,6 +16,7 @@ from AppKit import (
     NSBoxSeparator,
     NSButton,
     NSColor,
+    NSFocusRingTypeNone,
     NSFont,
     NSFontAttributeName,
     NSFontWeightMedium,
@@ -24,7 +26,6 @@ from AppKit import (
     NSImage,
     NSImageOnly,
     NSKernAttributeName,
-    NSMakePoint,
     NSMakeRect,
     NSNoBorder,
     NSScrollView,
@@ -86,6 +87,7 @@ def _icon_button(symbol, fallback, w=22.0):
         b.setTitle_(fallback)
     b.setBordered_(False)
     b.setBezelStyle_(NSBezelStyleRegularSquare)
+    b.setFocusRingType_(NSFocusRingTypeNone)  # kill the blue key-focus glow
     b.setContentTintColor_(NSColor.secondaryLabelColor())
     return b
 
@@ -110,6 +112,7 @@ class Row(NSView):
     def build(self, p, target):
         self._hover = False
         self._mine = p.is_current_user
+        self._confirming = False
 
         self.port = _label(
             _GUTTER, 6, 56, 13, NSColor.labelColor(), NSFontWeightSemibold, mono=True
@@ -131,21 +134,50 @@ class Row(NSView):
         for v in (self.port, self.name, self.sub):
             self.addSubview_(v)
 
-        # Kill is destructive: red, icon-only, hidden until the row is hovered.
-        # Another user's process can't be killed, so it gets no control at all.
+        # Kill is destructive, so it's a two-step inline confirm: a trash button
+        # (revealed on hover) expands into a green check / red cross. Another
+        # user's process can't be killed, so it gets no controls at all.
         if p.is_current_user:
-            self.kill = _icon_button("xmark.circle.fill", "✕")
-            self.kill.setContentTintColor_(NSColor.systemRedColor())
-            self.kill.setFrame_(NSMakeRect(_W - _PAD - 22, 11, 22, 22))
-            self.kill.setTag_(p.pid)
-            self.kill.setTarget_(target)
-            self.kill.setAction_("kill:")
-            self.kill.setHidden_(True)
-            self.addSubview_(self.kill)
+            self.delete = _icon_button("trash", "Del")
+            self.delete.setContentTintColor_(NSColor.systemRedColor())
+            self.delete.setFrame_(NSMakeRect(_W - _PAD - 22, 11, 22, 22))
+            self.delete.setTarget_(self)
+            self.delete.setAction_("askKill:")
+            self.delete.setHidden_(True)
+
+            self.confirm = _icon_button("checkmark.circle.fill", "✓")
+            self.confirm.setContentTintColor_(NSColor.systemGreenColor())
+            self.confirm.setFrame_(NSMakeRect(_W - _PAD - 50, 11, 22, 22))
+            self.confirm.setTag_(p.pid)
+            self.confirm.setTarget_(target)
+            self.confirm.setAction_("kill:")
+            self.confirm.setHidden_(True)
+
+            self.cancel = _icon_button("xmark.circle.fill", "✕")
+            self.cancel.setContentTintColor_(NSColor.systemRedColor())
+            self.cancel.setFrame_(NSMakeRect(_W - _PAD - 22, 11, 22, 22))
+            self.cancel.setTarget_(self)
+            self.cancel.setAction_("cancelKill:")
+            self.cancel.setHidden_(True)
+
+            for v in (self.delete, self.confirm, self.cancel):
+                self.addSubview_(v)
         else:
             for v in (self.port, self.name, self.sub):
                 v.setAlphaValue_(0.5)
         return self
+
+    def askKill_(self, _sender):
+        self._confirming = True
+        self.delete.setHidden_(True)
+        self.confirm.setHidden_(False)
+        self.cancel.setHidden_(False)
+
+    def cancelKill_(self, _sender):
+        self._confirming = False
+        self.confirm.setHidden_(True)
+        self.cancel.setHidden_(True)
+        self.delete.setHidden_(not self._hover)
 
     def isFlipped(self):
         return True
@@ -165,14 +197,14 @@ class Row(NSView):
 
     def mouseEntered_(self, _e):
         self._hover = True
-        if self._mine:
-            self.kill.setHidden_(False)
+        if self._mine and not self._confirming:
+            self.delete.setHidden_(False)
         self.setNeedsDisplay_(True)
 
     def mouseExited_(self, _e):
         self._hover = False
-        if self._mine:
-            self.kill.setHidden_(True)
+        if self._mine and not self._confirming:
+            self.delete.setHidden_(True)
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, _rect):

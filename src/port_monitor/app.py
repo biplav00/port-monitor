@@ -5,13 +5,12 @@ from __future__ import annotations
 
 import objc
 from AppKit import (
-    NSAlert,
-    NSAlertFirstButtonReturn,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
     NSEvent,
     NSEventModifierFlagShift,
     NSImage,
+    NSImageLeft,
     NSMakeRect,
     NSMinYEdge,
     NSObject,
@@ -45,6 +44,7 @@ class _Controller(NSObject):
         if img is not None:
             img.setTemplate_(True)
             btn.setImage_(img)
+            btn.setImagePosition_(NSImageLeft)  # count sits to the right of the icon
         else:
             btn.setTitle_("⦿")
         btn.setTarget_(self)
@@ -75,6 +75,7 @@ class _Controller(NSObject):
         try:
             self._ports = ports.list_listening()
             self.view.render_ports_(self._ports, self)
+            self.item.button().setTitle_(f" {len(self._ports)}")
         except Exception:
             pass  # never let a render error kill the timer loop
 
@@ -85,20 +86,9 @@ class _Controller(NSObject):
         self._refresh()
 
     def kill_(self, sender):
+        # The row's green-check confirm is the confirmation — kill straight away.
         pid = int(sender.tag())
         force = bool(NSEvent.modifierFlags() & NSEventModifierFlagShift)
-        match = next((p for p in self._ports if p.pid == pid), None)
-        name = match.command if match else f"pid {pid}"
-
-        alert = NSAlert.alloc().init()
-        alert.setMessageText_(f"Kill {name}?")
-        alert.setInformativeText_(
-            f"{'Force kill (SIGKILL)' if force else 'Terminate (SIGTERM)'} pid {pid}."
-        )
-        alert.addButtonWithTitle_("Kill")  # first button = default (Return)
-        alert.addButtonWithTitle_("Cancel")
-        if alert.runModal() != NSAlertFirstButtonReturn:
-            return
         try:
             ports.kill(pid, force)
         except (ProcessLookupError, PermissionError):
