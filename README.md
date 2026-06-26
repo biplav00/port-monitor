@@ -32,6 +32,15 @@ uv run pytest                   # tests
 packaging/build_dmg.sh          # produce Port Monitor.app + .dmg
 ```
 
+## CI / CD
+
+Every push and PR runs `.github/workflows/test.yml` on `macos-latest`:
+**pytest** (Python 3.12 and 3.13), **ruff check** on `src/`, and
+**mypy --ignore-missing-imports** on `src/`. Releases are produced by
+`.github/workflows/build.yml`, which runs `packaging/build_dmg.sh` and
+uploads the resulting `Port Monitor.dmg` to the GitHub Release on any
+`v*` tag push.
+
 ## License
 
 MIT.

@@ -104,7 +104,7 @@ class _Controller(NSObject):
         NSApplication.sharedApplication().terminate_(None)
 
 
-_RETAIN = []  # keep the controller (and its status item) alive
+_RETAIN: list[_Controller] = []  # keep the controller (and its status item) alive
 
 
 def run():
