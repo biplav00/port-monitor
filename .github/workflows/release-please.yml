@@ -10,6 +10,8 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     outputs:
       release_created: ${{ steps.release.outputs.releases_created }}
       tag: ${{ steps.release.outputs.tag }}
