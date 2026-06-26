@@ -3,8 +3,7 @@
   "packages": {
     ".": {
       "package-name": "port-monitor",
-      "release-type": "python",
-      "version-file": "pyproject.toml"
+      "release-type": "python"
     }
   }
 }
