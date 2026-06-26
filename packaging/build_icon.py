@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Generate the Port Monitor app icon set.
 
-Design: a deep navy gradient rounded square with three horizontal "port" rows.
-Each row shows a small status LED (green/yellow/red) on the left and a port
-number "label" on the right — communicating "monitoring listening ports"
-without leaning on the same SF Symbol used in the menu bar.
+Design: a white rounded square with a stylized radar / port-scan motif —
+a central node with three concentric arcs radiating outward. Reads as
+"scanning for listening ports" but is distinct from Apple's
+`dot.radiowaves.up.forward` SF Symbol already used in the menu bar:
+- arcs fan to the upper-right (consistent with the broadcast direction
+  in `dot.radiowaves.up.forward`),
+- the center is a solid dot rather than a hollow ring,
+- the outermost arc is broken into two segments to evoke "ports"
+  rather than continuous signal.
 
 Run from the repo root:
     python3 packaging/build_icon.py
@@ -15,6 +20,7 @@ Writes:
 """
 from __future__ import annotations
 
+import math
 import os
 import subprocess
 import sys
@@ -36,106 +42,81 @@ SIZES = [
     (512, 1), (512, 2),
 ]
 
-BG_TOP = (37, 99, 235)     # blue-600
-BG_BOT = (29, 78, 216)     # blue-700
-CARD = (255, 255, 255, 230)
-DOT_LIVE = (74, 222, 128)   # green-400
-DOT_IDLE = (250, 204, 21)   # amber-400
-DOT_DEAD = (248, 113, 113)  # red-400
-TEXT = (15, 23, 42)         # slate-900
+# Full-white, monochrome icon (per design brief).
+INK = (15, 23, 42)  # slate-900 — high contrast on white
 
 
-def lerp(a: int, b: int, t: float) -> int:
-    return int(a + (b - a) * t)
-
-
-def gradient_bg(size: int) -> Image.Image:
-    """A rounded-square gradient background."""
+def _rounded_rect_mask(size: int, radius: int) -> Image.Image:
+    """White rounded square (the 'tile')."""
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    px = img.load()
-    radius = int(size * 0.22)  # macOS Big Sur+ radius
-    for y in range(size):
-        t = y / max(1, size - 1)
-        r = lerp(BG_TOP[0], BG_BOT[0], t)
-        g = lerp(BG_TOP[1], BG_BOT[1], t)
-        b = lerp(BG_TOP[2], BG_BOT[2], t)
-        for x in range(size):
-            # rounded mask: skip pixels outside the rounded rect
-            dx = min(x, size - 1 - x)
-            dy = min(y, size - 1 - y)
-            if dx < radius and dy < radius:
-                d = ((radius - dx) ** 2 + (radius - dy) ** 2) ** 0.5
-                if d > radius:
-                    continue
-            px[x, y] = (r, g, b, 255)
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([0, 0, size - 1, size - 1], radius=radius, fill=(255, 255, 255, 255))
     return img
 
 
-def draw_card(canvas: Image.Image, x: int, y: int, w: int, h: int, radius: int) -> None:
-    """White rounded card on the gradient."""
+def _draw_arc(canvas: Image.Image, cx: int, cy: int, r: float,
+              start_deg: float, end_deg: float, width: int) -> None:
+    """Draw an arc segment as a thick stroke (open, not a pie)."""
     draw = ImageDraw.Draw(canvas, "RGBA")
-    draw.rounded_rectangle([x, y, x + w, y + h], radius=radius, fill=CARD)
+    bbox = [cx - r, cy - r, cx + r, cy + r]
+    draw.arc(bbox, start=start_deg, end=end_deg, fill=INK, width=width)
 
 
-def draw_dot(draw: ImageDraw.Image, cx: int, cy: int, r: int, color: tuple[int, int, int]) -> None:
-    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
-
-
-def draw_row(canvas: Image.Image, top: int, height: int, color: tuple[int, int, int]) -> None:
-    """One row in the port list: LED on the left, a 'label' bar on the right."""
+def _draw_dot(canvas: Image.Image, cx: int, cy: int, r: float) -> None:
     draw = ImageDraw.Draw(canvas, "RGBA")
-    # LED
-    r = height * 0.18
-    draw_dot(draw, int(height * 0.55), top + height // 2, int(r), color)
-    # Label bar (simulates text)
-    bar_left = int(height * 1.1)
-    bar_w = int(height * 2.6)
-    bar_h = int(height * 0.22)
-    bar_y = top + (height - bar_h) // 2
-    draw.rounded_rectangle([bar_left, bar_y, bar_left + bar_w, bar_y + bar_h],
-                           radius=bar_h // 2, fill=TEXT)
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=INK)
+
+
+def _draw_port_segment(canvas: Image.Image, cx: int, cy: int, r: float,
+                       gap_deg: float, width: int) -> None:
+    """A nearly-full ring with a small gap (suggests a 'port' / opening)."""
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    bbox = [cx - r, cy - r, cx + r, cy + r]
+    # Draw most of the ring, leave a small gap at the top-right.
+    draw.arc(bbox, start=gap_deg, end=360 - gap_deg, fill=INK, width=width)
 
 
 def render(size: int) -> Image.Image:
-    pad = int(size * 0.18)
-    inner = size - 2 * pad
-    img = gradient_bg(size)
-    # Card
-    card_pad = int(inner * 0.04)
-    card_x = pad + card_pad
-    card_y = pad + card_pad
-    card_w = inner - 2 * card_pad
-    card_h = inner - 2 * card_pad
-    card_radius = int(size * 0.10)
-    draw_card(img, card_x, card_y, card_w, card_h, card_radius)
+    canvas = _rounded_rect_mask(size, radius=int(size * 0.22))
 
-    # Three rows of ports
-    row_count = 3
-    row_gap = int(card_h * 0.08)
-    row_h = (card_h - row_gap * (row_count + 1)) // row_count
-    row_top = card_y + row_gap
-    colors = [DOT_LIVE, DOT_LIVE, DOT_IDLE]
-    for i, color in enumerate(colors):
-        draw_row(img, row_top + i * (row_h + row_gap), row_h, color)
-    return img
+    # Anchor in the lower-left quadrant so the arcs fan up-right,
+    # echoing `dot.radiowaves.up.forward` without copying it.
+    cx = int(size * 0.34)
+    cy = int(size * 0.66)
+    max_r = size * 0.40
+    width = max(2, int(size * 0.075))
+
+    # Solid dot at the origin (the 'listening port').
+    _draw_dot(canvas, cx, cy, r=size * 0.06)
+
+    # Three concentric arcs fanning up-right. The outermost is split
+    # into two short segments to evoke 'ports' rather than a continuous
+    # signal — that's the visual distinction from the wifi symbol.
+    r1 = max_r * 0.45
+    _draw_arc(canvas, cx, cy, r1, start_deg=-70, end_deg=-20, width=width)
+
+    r2 = max_r * 0.78
+    _draw_arc(canvas, cx, cy, r2, start_deg=-65, end_deg=-25, width=width)
+
+    # Outermost: two short segments with a small gap.
+    r3 = max_r * 1.10
+    _draw_arc(canvas, cx, cy, r3, start_deg=-60, end_deg=-38, width=width)
+    _draw_arc(canvas, cx, cy, r3, start_deg=-28, end_deg=-12, width=width)
+
+    return canvas
 
 
 def main() -> int:
     ICONSET.mkdir(parents=True, exist_ok=True)
 
-    # Render at 1024 first (the source-of-truth), then downscale to all sizes.
     base = render(1024)
     for s, scale in SIZES:
         actual = s * scale
         out = base.resize((actual, actual), Image.LANCZOS)
-        if scale == 1:
-            name = f"icon_{s}x{s}.png"
-        else:
-            name = f"icon_{s}x{s}@2x.png"
+        name = f"icon_{s}x{s}.png" if scale == 1 else f"icon_{s}x{s}@2x.png"
         out.save(ICONSET / name)
     print(f"Wrote icons to {ICONSET}")
 
-    # Build .icns from the iconset.
     subprocess.check_call(["iconutil", "-c", "icns", str(ICONSET), "-o", str(ICNS)])
     print(f"Wrote {ICNS}")
     return 0
