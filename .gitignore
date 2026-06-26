@@ -12,9 +12,3 @@ packaging/dist/
 .DS_Store
 .idea/
 .vscode/
-
-# Stray build artifacts from the old Tauri/web stack (still on disk)
-node_modules/
-/target
-/dist
-/src-tauri/
