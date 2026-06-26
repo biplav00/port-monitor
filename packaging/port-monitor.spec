@@ -1,7 +1,24 @@
 # PyInstaller spec for port-monitor — macOS menu-bar app (.app bundle).
 # Run from the packaging/ dir:  uv run pyinstaller port-monitor.spec
 # (or use packaging/build_dmg.sh). Paths below are relative to this dir.
+import os
+import re
+
 from PyInstaller.utils.hooks import collect_all
+
+
+def _read_version():
+    """Read the version from ../pyproject.toml so it stays in sync."""
+    here = os.path.dirname(os.path.abspath("PORT_MONITOR_SPEC"))
+    pyproject = os.path.join(here, "..", "pyproject.toml")
+    with open(pyproject) as f:
+        match = re.search(r'^version\s*=\s*"([^"]+)"', f.read(), re.MULTILINE)
+    if not match:
+        raise SystemExit(f"Could not find version in {pyproject}")
+    return match.group(1)
+
+
+VERSION = _read_version()
 
 # Pull the pyobjc AppKit/objc bits so the bundle is self-contained.
 ak_d, ak_b, ak_h = collect_all("AppKit")
@@ -49,8 +66,8 @@ app = BUNDLE(
         "LSUIElement": True,    # menu-bar only: no Dock icon, no window
         "CFBundleName": "Port Monitor",
         "CFBundleDisplayName": "Port Monitor",
-        "CFBundleShortVersionString": "0.3.0",
-        "CFBundleVersion": "0.3.0",
+        "CFBundleShortVersionString": VERSION,
+        "CFBundleVersion": VERSION,
         "LSMinimumSystemVersion": "12.0",
     },
 )
