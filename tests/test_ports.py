@@ -1,4 +1,4 @@
-from port_monitor.ports import parse_lsof
+from port_monitor.ports import list_listening
 
 # Two listeners on the same port (v6 then v4) → IPv4 wins; ports sorted;
 # the current user's process is flagged, another user's isn't.
@@ -11,8 +11,9 @@ SAMPLE = "\n".join(
 )
 
 
-def test_parse_dedup_sort_and_current_user():
-    ports = parse_lsof(SAMPLE, me="alice")
+def test_dedup_sort_and_current_user():
+    # Drive the whole command→parse path through the public seam with a fake run.
+    ports = list_listening(run=lambda: SAMPLE, me="alice")
     assert [p.port for p in ports] == [3000, 6379]      # sorted, deduped
 
     p3000 = ports[0]
@@ -24,4 +25,11 @@ def test_parse_dedup_sort_and_current_user():
 
 
 def test_empty_input():
-    assert parse_lsof("", me="alice") == []
+    assert list_listening(run=lambda: "", me="alice") == []
+
+
+def test_lsof_failure_is_empty():
+    def boom():
+        raise FileNotFoundError("lsof missing")
+
+    assert list_listening(run=boom, me="alice") == []

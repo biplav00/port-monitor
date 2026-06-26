@@ -22,7 +22,7 @@ from AppKit import (
     NSViewController,
 )
 
-from . import ports
+from .monitor import Monitor
 from .ui.popover import PopoverView
 
 _POLL = 3.0  # seconds
@@ -33,7 +33,7 @@ class _Controller(NSObject):
         self = objc.super(_Controller, self).init()
         if self is None:
             return None
-        self._ports = []
+        self.monitor = Monitor()
 
         bar = NSStatusBar.systemStatusBar()
         self.item = bar.statusItemWithLength_(NSVariableStatusItemLength)
@@ -73,9 +73,9 @@ class _Controller(NSObject):
     @objc.python_method
     def _refresh(self):
         try:
-            self._ports = ports.list_listening()
-            self.view.render_ports_(self._ports, self)
-            self.item.button().setTitle_(f" {len(self._ports)}")
+            current = self.monitor.refresh()
+            self.view.render_ports_(current, self)
+            self.item.button().setTitle_(f" {len(current)}")
         except Exception:
             pass  # never let a render error kill the timer loop
 
@@ -87,12 +87,8 @@ class _Controller(NSObject):
 
     def kill_(self, sender):
         # The row's green-check confirm is the confirmation — kill straight away.
-        pid = int(sender.tag())
         force = bool(NSEvent.modifierFlags() & NSEventModifierFlagShift)
-        try:
-            ports.kill(pid, force)
-        except (ProcessLookupError, PermissionError):
-            pass
+        self.monitor.kill(int(sender.tag()), force)
         self._refresh()
 
     def toggle_(self, sender):

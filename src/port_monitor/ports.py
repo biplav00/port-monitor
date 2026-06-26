@@ -2,6 +2,11 @@
 
 Uses `lsof` in field-output mode — no sudo needed for the current user's own
 processes, which is exactly the dev-server-janitor scope.
+
+The seam is the subprocess: `list_listening` takes a `run` callable (the real
+lsof by default) so tests drive the whole command->parse path through the same
+interface callers use. The `-F` field spec and the parser that reads it live
+side by side below — they must agree, so they're kept together.
 """
 from __future__ import annotations
 
@@ -9,28 +14,37 @@ import getpass
 import os
 import signal
 import subprocess
+from collections.abc import Callable
 
 from .types import Port
 
+# lsof -F emits one field per line, tagged by the IDs requested here:
+#   p<pid>  c<command>  L<login>  n<addr>  (plus f<fd> we skip).
+# _parse below reads exactly these tags; change one, change both.
+_FIELDS = "pcLn"
+_LSOF_CMD = ["lsof", "+c", "0", "-nP", "-iTCP", "-sTCP:LISTEN", "-F", _FIELDS]
 
-def list_listening() -> list[Port]:
+
+def _run_lsof() -> str:
+    return subprocess.run(
+        _LSOF_CMD, capture_output=True, text=True, timeout=5
+    ).stdout
+
+
+def list_listening(run: Callable[[], str] = _run_lsof, me: str | None = None) -> list[Port]:
+    """Current listening TCP ports, deduped and sorted. Empty on any lsof error."""
+    if me is None:
+        me = getpass.getuser()
     try:
-        out = subprocess.run(
-            ["lsof", "+c", "0", "-nP", "-iTCP", "-sTCP:LISTEN", "-F", "pcLn"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        ).stdout
+        out = run()
     except (subprocess.SubprocessError, FileNotFoundError):
         return []
-    return parse_lsof(out, getpass.getuser())
+    return _parse(out, me)
 
 
-def parse_lsof(out: str, me: str) -> list[Port]:
-    """Pure transform of `lsof -F pcLn` output → sorted, deduped ports.
-    Split out so the parsing/dedup logic is testable without invoking lsof."""
-    # lsof -F emits one field per line: p<pid>, c<command>, L<login>, then
-    # f<fd>/n<addr> per open file. Track the current process; each n is a listener.
+def _parse(out: str, me: str) -> list[Port]:
+    """Pure transform of `lsof -F pcLn` output -> sorted, deduped ports."""
+    # Track the current process; each n line is a listener for that process.
     by_port: dict[int, tuple[Port, bool]] = {}
     pid = 0
     command = ""
