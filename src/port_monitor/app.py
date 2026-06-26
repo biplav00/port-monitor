@@ -51,7 +51,7 @@ class _Controller(NSObject):
         btn.setAction_("toggle:")
 
         self.view = (
-            PopoverView.alloc().initWithFrame_(NSMakeRect(0, 0, 360, 460)).build()
+            PopoverView.alloc().initWithFrame_(NSMakeRect(0, 0, 380, 460)).build()
         )
         vc = NSViewController.alloc().init()
         vc.setView_(self.view)

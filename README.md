@@ -6,10 +6,12 @@ A tiny **macOS** menu-bar app to see — and kill — processes on listening TCP
 
 - Lives in the menu bar (no Dock icon). Click the icon for a native popover that
   floats over full-screen apps and dismisses on click-away.
-- Listening TCP ports with process name, PID, and owner.
-- Kill button per row — `SIGTERM` by default, **hold Shift** for `SIGKILL`, with a
-  confirmation prompt. Another user's processes are shown dimmed and can't be killed.
-- Auto-refreshes; **Refresh** and **Quit** in the footer.
+- Listening TCP ports with process name, PID, and owner. A status dot marks the
+  ones that are yours (green) versus another user's (gray).
+- Hover a row to reveal its Kill control — `SIGTERM` by default, **hold Shift** for
+  `SIGKILL`, with a confirmation prompt. Another user's processes are dimmed and
+  can't be killed.
+- Auto-refreshes; **Refresh** in the header, **Quit** in the footer.
 
 Built natively with **Python + PyObjC** (`NSStatusItem` + `NSPopover`). macOS-only —
 that's deliberate: the native popover gives full-screen overlay and native look that
