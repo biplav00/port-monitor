@@ -64,29 +64,60 @@ fn kill_port(pid: u32, force: bool) -> Result<(), String> {
     port_enum::kill(pid, force).map_err(|e| format!("Kill {pid} failed: {e}"))
 }
 
-/// Make the popover float over *other* apps' full-screen spaces, not just the
-/// active desktop. Tauri only exposes `canJoinAllSpaces`; full-screen overlay
-/// also needs `fullScreenAuxiliary` + a raised window level, set on the NSWindow.
+/// Turn the popover into a non-activating NSPanel so it floats over *other*
+/// apps' full-screen Spaces. A plain window (even with `fullScreenAuxiliary`)
+/// can't overlay another app's full-screen Space — showing/focusing it switches
+/// away instead. Reclassing to NSPanel + the non-activating mask lets it become
+/// key without activating the app, so it draws over the current Space.
 #[cfg(target_os = "macos")]
-fn float_over_fullscreen(win: &tauri::WebviewWindow) {
-    use objc2::{msg_send, runtime::AnyObject};
+fn configure_panel(win: &tauri::WebviewWindow) {
+    use objc2::msg_send;
+    use objc2::runtime::{AnyClass, AnyObject};
     let Ok(ptr) = win.ns_window() else {
         return;
     };
-    let ns = ptr as *mut AnyObject;
-    // NSWindowCollectionBehaviorCanJoinAllSpaces (1<<0) | FullScreenAuxiliary (1<<8)
-    const BEHAVIOR: usize = (1 << 0) | (1 << 8);
-    // NSStatusWindowLevel — draw above the full-screen app's content.
-    const LEVEL: isize = 25;
+    let ns: &AnyObject = unsafe { &*(ptr as *const AnyObject) };
+    // NSWindow -> NSPanel (same instance size; a drop-in subclass).
+    if let Some(cls) = AnyClass::get(c"NSPanel") {
+        unsafe {
+            let _ = AnyObject::set_class(ns, cls);
+        }
+    }
     unsafe {
-        let _: () = msg_send![ns, setCollectionBehavior: BEHAVIOR];
-        let _: () = msg_send![ns, setLevel: LEVEL];
+        let mask: usize = msg_send![ns, styleMask];
+        // NSWindowStyleMaskNonactivatingPanel = 1 << 7
+        let _: () = msg_send![ns, setStyleMask: mask | (1usize << 7)];
+        // canJoinAllSpaces (1<<0) | fullScreenAuxiliary (1<<8)
+        let _: () = msg_send![ns, setCollectionBehavior: (1usize << 0) | (1usize << 8)];
+        // NSStatusWindowLevel — above the full-screen app's content.
+        let _: () = msg_send![ns, setLevel: 25isize];
+        let _: () = msg_send![ns, setHidesOnDeactivate: false];
     }
 }
 
 #[cfg(not(target_os = "macos"))]
-fn float_over_fullscreen(win: &tauri::WebviewWindow) {
+fn configure_panel(win: &tauri::WebviewWindow) {
     let _ = win.set_visible_on_all_workspaces(true);
+}
+
+/// Show + focus the popover without activating the app (macOS), so it overlays
+/// the current full-screen Space instead of switching away from it.
+fn show_popover(win: &tauri::WebviewWindow) {
+    let _ = win.show();
+    #[cfg(target_os = "macos")]
+    {
+        use objc2::msg_send;
+        use objc2::runtime::AnyObject;
+        if let Ok(ptr) = win.ns_window() {
+            let ns: &AnyObject = unsafe { &*(ptr as *const AnyObject) };
+            unsafe {
+                let _: () = msg_send![ns, orderFrontRegardless];
+                let _: () = msg_send![ns, makeKeyWindow];
+            }
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = win.set_focus();
 }
 
 /// Show the popover anchored under the tray icon, or hide it if already shown.
@@ -105,8 +136,7 @@ fn toggle_popover(app: &tauri::AppHandle, icon_rect: Option<(f64, f64, f64, f64)
         let y = iy + ih;
         let _ = win.set_position(PhysicalPosition::new(x.max(0.0), y));
     }
-    let _ = win.show();
-    let _ = win.set_focus();
+    show_popover(&win);
 }
 
 pub fn run() {
@@ -163,7 +193,7 @@ pub fn run() {
                 .build(app)?;
 
             if let Some(win) = app.get_webview_window("popover") {
-                float_over_fullscreen(&win);
+                configure_panel(&win);
             }
 
             Ok(())
